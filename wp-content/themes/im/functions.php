@@ -255,10 +255,83 @@ function process_xlsx_to_csv() {
 // Регистрация обработчика
 add_action('admin_post_process_xlsx', 'process_xlsx_to_csv');
 
+// Регистрация action для фильтрации товаров
+function filter_products_by_csv_action() {
+    // Вызываем функцию для фильтрации CSV
+    filter_csv_files();
 
+    // Перенаправляем пользователя обратно на страницу после выполнения действия
+    wp_redirect(home_url()); // Замените на нужный URL (например, страницу с результатами)
+    exit;
+}
 
+// Регистрация обработчика для admin-post (если пользователь авторизован)
+add_action('admin_post_filter_products_by_csv', 'filter_products_by_csv_action');
 
+// Если действие вызывается не через админку, а через фронтенд (для неавторизованных пользователей)
+add_action('admin_post_nopriv_filter_products_by_csv', 'filter_products_by_csv_action');
 
+// Функция для фильтрации CSV файлов
+function filter_csv_files() {
+    // Путь к входным файлам и файлу для вывода
+    $output_file = get_template_directory() . '/output.csv';    // Основной CSV файл с данными
+    $filter_file = get_template_directory() . '/filter.csv';    // Файл с фильтрами (товары)
+    $filtered_output_file = get_template_directory() . '/filtered_output.csv'; // Отфильтрованный CSV файл
+
+    // Проверка на существование файлов
+    if (!file_exists($output_file) || !file_exists($filter_file)) {
+        echo "Ошибка: один или оба входных файла не найдены.";
+        return;
+    }
+
+    // Чтение filter.csv (содержит наименования товаров для фильтрации)
+    $filter_products = [];
+    if (($handle = fopen($filter_file, 'r')) !== FALSE) {
+        // Пропускаем заголовок
+        fgetcsv($handle);
+
+        // Чтение наименований товаров из filter.csv (предполагается, что наименования товаров в 1-м столбце)
+        while (($data = fgetcsv($handle)) !== FALSE) {
+            $filter_products[] = trim($data[0]);  // Наименования товаров в 1-м столбце
+        }
+        fclose($handle);
+    } else {
+        echo "Ошибка при открытии файла фильтра $filter_file.";
+        return;
+    }
+
+    // Чтение output.csv и фильтрация данных
+    $filtered_rows = [];
+    if (($handle = fopen($output_file, 'r')) !== FALSE) {
+        $headers = fgetcsv($handle); // Чтение заголовков
+        $filtered_rows[] = $headers; // Добавление заголовков в новый файл
+
+        // Чтение данных из output.csv
+        while (($data = fgetcsv($handle)) !== FALSE) {
+            $product_name = trim($data[0]); // Наименование товара в 1-м столбце
+
+            // Если наименование товара присутствует в filter.csv, добавляем строку в отфильтрованный список
+            if (in_array($product_name, $filter_products)) {
+                $filtered_rows[] = $data;
+            }
+        }
+        fclose($handle);
+    } else {
+        echo "Ошибка при открытии файла $output_file.";
+        return;
+    }
+
+    // Запись отфильтрованных данных в filtered_output.csv
+    if (($handle = fopen($filtered_output_file, 'w')) !== FALSE) {
+        foreach ($filtered_rows as $filtered_row) {
+            fputcsv($handle, $filtered_row); // Записываем каждую строку в файл
+        }
+        fclose($handle);
+        echo "Данные успешно отфильтрованы и записаны в $filtered_output_file.";
+    } else {
+        echo "Ошибка при записи в файл $filtered_output_file.";
+    }
+}
 
 
 

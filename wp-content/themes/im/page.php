@@ -5,6 +5,10 @@ Template Name: Главная
 get_header();
 ?>
 <a href="<?php echo admin_url('admin-post.php?action=process_xlsx'); ?>">Обработать xlsx</a>
+<a href="<?php echo admin_url('admin-post.php?action=filter_products_by_csv'); ?>">Отфильтровать позиции</a>
+<!-- <a href="<?php //echo admin_url('admin-post.php?action=process_xlsx_with_images'); ?>">Обработать xlsx-img</a>
+<a href="<?php //echo admin_url('admin-post.php?action=import_images_and_assign_to_products'); ?>">Привязать изображения к товарам</a> -->
+
 
 
 <div class="products-wrapper">
