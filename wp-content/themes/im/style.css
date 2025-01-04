@@ -969,7 +969,13 @@ textarea {
 }
 
 
-
+.wrap {
+	display: grid;
+    grid-template-columns: repeat(2, 1fr);
+}
+.wrap a {
+	margin-bottom: 50px;
+}
 
 .products-wrapper {
     display: flex;
